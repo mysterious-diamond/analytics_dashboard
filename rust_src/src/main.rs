@@ -26,12 +26,13 @@ async fn main() {
     println!("Rust API running at http://{}", addr);
 
     // Start the server
-    axum::serve(listener, app)
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }
 
 async fn verify_user(Json(data): Json<LoginData>) -> Json<AuthResult> {
 	let valid = data.username == "aaron" && data.password == "123";
+	println!("Got query, returning {}", valid);
 	Json(AuthResult { known: valid })
 }

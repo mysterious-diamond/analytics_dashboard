@@ -1,28 +1,23 @@
-use axum::{routing::get, Router, Json};
-use serde::Serialize;
+use axum::{routing::post, Router, Json};
+use serde::{Serialize, Deserialize};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
-#[derive(Serialize)]
-struct Stats {
-    users: u32,
-    messages: u32,
+#[derive(Deserialize)]
+struct LoginData {
+    username: String,
+    password: String,
 }
 
-async fn get_stats() -> Json<Stats> {
-    let stats = Stats {
-        users: 42,
-        messages: 128,
-    };
-
-    println!("Got message, returning stats");
-    Json(stats)
+#[derive(Serialize)]
+struct AuthResult {
+	known: bool,
 }
 
 #[tokio::main]
 async fn main() {
     // Create router
-    let app = Router::new().route("/stats", get(get_stats));
+    let app = Router::new().route("/verify", post(verify_user));
 
     // Bind TCP listener
     let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
@@ -34,4 +29,9 @@ async fn main() {
     axum::serve(listener, app)
         .await
         .unwrap();
+}
+
+async fn verify_user(Json(data): Json<LoginData>) -> Json<AuthResult> {
+	let valid = data.username == "aaron" && data.password == "123";
+	Json(AuthResult { known: valid })
 }

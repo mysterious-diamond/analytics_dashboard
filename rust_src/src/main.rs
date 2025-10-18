@@ -14,6 +14,8 @@ async fn get_stats() -> Json<Stats> {
         users: 42,
         messages: 128,
     };
+
+    println!("Got message, returning stats");
     Json(stats)
 }
 

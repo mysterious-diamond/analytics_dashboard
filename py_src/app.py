@@ -13,7 +13,12 @@ def login():
         return render_template("login.html")
 
     data = {"username": request.form.get("username"), "password": request.form.get("password")}
-    response = requests.post("http://127.0.0.1:4000/verify", json=data)
+    
+    try :
+        response = requests.post("http://127.0.0.1:4000/verify", json=data)
+    except :
+        return "Err checking microservice unresponsive/malfunctioning"
+        
     print("Status code:", response.status_code)
     print("Raw text:", response.text)  # <-- see what came back
     result = response.json()

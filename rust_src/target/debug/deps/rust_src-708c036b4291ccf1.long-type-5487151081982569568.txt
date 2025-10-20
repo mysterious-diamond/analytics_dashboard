@@ -1,0 +1,2 @@
+fn(axum::Json<LoginData>, axum::extract::State<sqlx::Pool<sqlx::MySql>>) -> impl std::future::Future<Output = axum::Json<AuthResult>> {verify_user}
+fn(axum::Json<LoginData>, axum::extract::State<sqlx::Pool<sqlx::MySql>>) -> impl std::future::Future<Output = axum::Json<AuthResult>> {verify_user}: axum::handler::Handler<_, _>

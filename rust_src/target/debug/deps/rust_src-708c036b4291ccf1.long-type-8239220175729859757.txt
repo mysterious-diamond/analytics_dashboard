@@ -1,0 +1,2 @@
+for<'a> fn(axum::Json<LoginData>, axum::extract::State<&'a sqlx::Pool<sqlx::MySql>>) -> impl std::future::Future<Output = axum::Json<AuthResult>> {verify_user}
+for<'a> fn(axum::Json<LoginData>, axum::extract::State<&'a sqlx::Pool<sqlx::MySql>>) -> impl std::future::Future<Output = axum::Json<AuthResult>> {verify_user}: axum::handler::Handler<_, _>

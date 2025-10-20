@@ -19,8 +19,6 @@ def login():
     except :
         return "Err checking microservice unresponsive/malfunctioning"
         
-    print("Status code:", response.status_code)
-    print("Raw text:", response.text)  # <-- see what came back
     result = response.json()
     if result.get("known"):
         return redirect("/dashboard")

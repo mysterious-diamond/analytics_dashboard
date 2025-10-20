@@ -1,7 +1,5 @@
-use axum::{routing::post, Router, Json};
-use serde::{Serialize, Deserialize};
-use std::net::SocketAddr;
-use tokio::net::TcpListener;
+mod includes;
+use includes::*;
 
 #[derive(Deserialize)]
 struct LoginData {
@@ -16,23 +14,54 @@ struct AuthResult {
 
 #[tokio::main]
 async fn main() {
-    // Create router
-    let app = Router::new().route("/verify", post(verify_user));
+	let max_connections = 10;
 
-    // Bind TCP listener
+	// Make a pool for connections
+	let pool = match MySqlPoolOptions::new()
+		.max_connections(max_connections)
+		.connect(&std::env::var("DATABASE_URL").unwrap())
+		.await	
+	{
+		Ok(val) => {
+			println!("Connected to database succesfully");
+			val
+		},
+		Err(err) => panic!("Wasn't able to connect to database, {}", err)
+	};
+	
+	// Configure service
+    let service = Router::new()
+    	.route("/verify", post(verify_user))
+    	.with_state(pool);
+
+	// Setup listener
     let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
-    let listener = TcpListener::bind(addr).await.unwrap();
+    let listener = match TcpListener::bind(addr).await {
+    	Ok(val) => {
+    		println!("Listener has been set up");
+    		val
+    	},
+    	Err(err) => panic!("Wasn't able to set up listener, {}", err)
+    };
 
+	// Start the service
     println!("Rust API running at http://{}", addr);
-
-    // Start the server
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+	axum::serve(listener, service.into_make_service()).await.unwrap();
 }
 
-async fn verify_user(Json(data): Json<LoginData>) -> Json<AuthResult> {
-	let valid = data.username == "aaron" && data.password == "123";
+async fn verify_user(State(pool): State<sqlx::MySqlPool>, Json(data): Json<LoginData>) -> Json<AuthResult> {
+	let result = sqlx::query!(
+		r#"
+		SELECT user_id FROM users WHERE username = ? AND password = ?
+		"#,
+		data.username,
+		data.password
+	)
+	.fetch_one(&pool)
+	.await;
+
+	let valid = result.is_ok();
+
 	println!("Got query, returning {}", valid);
 	Json(AuthResult { known: valid })
 }
